@@ -1,0 +1,107 @@
+[
+  {
+    "poiId": "ca-palace",
+    "title": "팰리스 오브 파인 아츠",
+    "lat": 37.80295,
+    "lon": -122.4484,
+    "source": {
+      "title": "San Francisco Recreation and Parks · Palace of Fine Arts",
+      "url": "https://sfrecpark.org/917/Palace-of-Fine-Arts"
+    },
+    "facts": [
+      "팰리스 오브 파인 아츠는 1915년 파나마 태평양 박람회에서 미술품을 전시하기 위해 지었습니다."
+    ]
+  },
+  {
+    "poiId": "ca-crissy",
+    "title": "크리시 필드",
+    "lat": 37.80436,
+    "lon": -122.45951,
+    "source": {
+      "title": "National Park Service · Crissy Airfield",
+      "url": "https://www.nps.gov/articles/crissy-airfield-presidio-of-san-francisco.htm"
+    },
+    "facts": [
+      "크리시 필드는 박람회를 위해 매립한 땅에 들어선 군용 비행장이었습니다.",
+      "1924년에는 크리시 비행장에서 새벽에 출발해 해 질 무렵 대륙을 횡단하는 비행이 이루어졌습니다."
+    ]
+  },
+  {
+    "poiId": "ca-fort-point",
+    "title": "포트 포인트",
+    "lat": 37.81064,
+    "lon": -122.47684,
+    "source": {
+      "title": "Golden Gate Bridge District · Fort Point Arch",
+      "url": "https://www.goldengate.org/exhibits/fort-point-arch/"
+    },
+    "facts": [
+      "금문교를 설계한 조지프 스트라우스는 다리 남쪽에 철제 아치를 두어 그 아래 벽돌 요새 포트 포인트를 보존했습니다."
+    ]
+  },
+  {
+    "poiId": "ca-custom-house",
+    "title": "몬터레이 커스텀 하우스",
+    "lat": 36.60336,
+    "lon": -121.8942,
+    "source": {
+      "title": "California State Parks · Custom House",
+      "url": "https://www.parks.ca.gov/ListedResources/Detail/1"
+    },
+    "facts": [
+      "몬터레이 커스텀 하우스는 알타 캘리포니아의 세관으로 쓰였고 1846년 미국 해군이 이곳에 국기를 게양했습니다."
+    ]
+  },
+  {
+    "poiId": "ca-whalers-cabin",
+    "title": "포인트 로보스 고래잡이 오두막",
+    "lat": 36.52255,
+    "lon": -121.941,
+    "source": {
+      "title": "California Office of Historic Preservation · Whaler’s Cabin",
+      "url": "https://ohp.parks.ca.gov/ListedResources/Detail/N2363"
+    },
+    "facts": [
+      "고래잡이 오두막 바닥을 발굴했을 때 장선을 받치고 있던 고래 척추뼈 여섯 개가 발견됐습니다."
+    ]
+  },
+  {
+    "poiId": "ca-tunnel-view",
+    "title": "요세미티 터널 뷰",
+    "lat": 37.7156,
+    "lon": -119.6769,
+    "source": {
+      "title": "National Park Service · Tunnel View Overlook",
+      "url": "https://home.nps.gov/yose/learn/nature/scenic-vistas-tunnel-view.htm"
+    },
+    "facts": [
+      "터널 뷰와 연결되는 와워나 터널은 화강암 산을 뚫어 만들었으며 공사에 거의 2년이 걸렸습니다."
+    ]
+  },
+  {
+    "poiId": "ca-keys-view",
+    "title": "조슈아트리 키스 뷰",
+    "lat": 33.92667,
+    "lon": -116.18735,
+    "source": {
+      "title": "National Park Service · Keys View",
+      "url": "https://www.nps.gov/places/keys-view.htm"
+    },
+    "facts": [
+      "키스 뷰에서는 코첼라 계곡을 내려다볼 수 있으며 날이 맑으면 멕시코의 시그널 산까지 보일 수 있습니다."
+    ]
+  },
+  {
+    "poiId": "ca-lighthouse",
+    "title": "올드 포인트 로마 등대",
+    "lat": 32.67135,
+    "lon": -117.24044,
+    "source": {
+      "title": "National Park Service · Old Point Loma Lighthouse",
+      "url": "https://www.nps.gov/cabr/planyourvisit/visiting-the-old-point-loma-lighthouse.htm"
+    },
+    "facts": [
+      "샌디에이고의 올드 포인트 로마 등대는 높은 곳에 지었지만 안개가 빛을 가려 아래쪽에 새 등대가 세워졌습니다."
+    ]
+  }
+]

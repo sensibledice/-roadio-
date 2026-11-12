@@ -1,0 +1,118 @@
+{
+  "kr": {
+    "title": "경주, 신라의 흔적",
+    "city": "경주",
+    "stops": [
+      {
+        "poiId": "demo-daereungwon",
+        "title": "대릉원",
+        "lat": 35.83766,
+        "lon": 129.21228,
+        "source": {
+          "title": "한국관광공사 · 대릉원 천마총",
+          "url": "https://access.visitkorea.or.kr/ms/detail.do?cotId=4d4046c2-28ea-4b82-b110-0ca59fd327a9"
+        },
+        "facts": [
+          "천마총의 이름은 말을 탈 때 쓰던 말다래에 그려진 천마도에서 유래했습니다.",
+          "천마총은 대릉원의 신라 고분군에 속합니다."
+        ]
+      },
+      {
+        "poiId": "kr-cheomseongdae",
+        "title": "첨성대",
+        "lat": 35.8347,
+        "lon": 129.21904,
+        "source": {
+          "title": "국가유산청 · 경주 첨성대",
+          "url": "https://my.heritage.go.kr/public/commentary/culSelectDetail.do?ccbaAsno=0000310000000&ccbaCpno=1113700310000&ccbaCtcd=37&ccbaKdcd=11"
+        },
+        "facts": [
+          "첨성대의 원통부는 다듬은 돌을 스물일곱 단으로 쌓아 만들었습니다.",
+          "첨성대는 외부가 매끄럽지만 내부는 돌의 뒷부분이 튀어나와 벽이 고르지 않습니다."
+        ]
+      },
+      {
+        "poiId": "demo-wolji",
+        "title": "동궁과 월지",
+        "lat": 35.83484,
+        "lon": 129.22655,
+        "source": {
+          "title": "경주시 문화관광 · 동궁과 월지",
+          "url": "https://search.gyeongju.go.kr/tour/page.do?cmd=2&con_uid=165&mnu_uid=4715"
+        },
+        "facts": [
+          "월지의 한쪽 둘레는 곧고 다른 쪽은 굽어서 어느 자리에서도 전체가 한눈에 보이지 않도록 꾸몄습니다.",
+          "신라 왕자가 머물던 별궁의 임해전에서는 손님을 맞고 연회를 열었습니다."
+        ]
+      }
+    ],
+    "script": [
+      "경주엔 돌과 물에 이야기가 남아 있어요. 오늘은 그 흔적을 따라가 볼게요.",
+      "대릉원에는 이름에 말 한 마리가 숨어 있는 무덤이 있어요. 말을 탈 때 쓰는 말다래에 천마 그림이 있었대요. 그 그림에서 천마총이라는 이름이 나왔죠.",
+      "첨성대에도 겉으로는 알기 어려운 이야기가 있어요. 다듬은 돌을 스물일곱 단 쌓아 올렸는데, 겉은 매끈하고 안에는 돌 끝이 삐죽 튀어나와 있대요.",
+      "동궁과 월지에선 돌 대신 물가를 생각해 볼까요? 연못의 한쪽 가장자리는 곧고, 다른 쪽은 굽었어요. 어디에 서느냐에 따라 같은 연못도 다르게 보이는 거죠."
+    ],
+    "quiz": {
+      "question": "여기서 함께 맞혀 볼까요? 월지의 양쪽 가장자리는 둘 다 곧았을까요?",
+      "answer": "한쪽만 곧았어요. 다른 쪽은 굽어 있어서 연못 전체가 한눈에 들어오지 않게 만들었대요.",
+      "factId": "demo-wolji-1"
+    }
+  },
+  "ca": {
+    "title": "샌프란시스코, 만을 따라",
+    "city": "샌프란시스코",
+    "stops": [
+      {
+        "poiId": "ca-palace",
+        "title": "팰리스 오브 파인 아츠",
+        "lat": 37.80295,
+        "lon": -122.4484,
+        "source": {
+          "title": "San Francisco Recreation and Parks · Palace of Fine Arts",
+          "url": "https://sfrecpark.org/917/Palace-of-Fine-Arts"
+        },
+        "facts": [
+          "팰리스 오브 파인 아츠는 1915년 파나마 태평양 박람회에서 미술품을 전시하기 위해 지었습니다."
+        ]
+      },
+      {
+        "poiId": "ca-crissy",
+        "title": "크리시 필드",
+        "lat": 37.80436,
+        "lon": -122.45951,
+        "source": {
+          "title": "National Park Service · Crissy Airfield",
+          "url": "https://www.nps.gov/articles/crissy-airfield-presidio-of-san-francisco.htm"
+        },
+        "facts": [
+          "크리시 필드는 박람회를 위해 매립한 땅에 들어선 군용 비행장이었습니다.",
+          "1924년에는 크리시 비행장에서 새벽에 출발해 해 질 무렵 대륙을 횡단하는 비행이 이루어졌습니다."
+        ]
+      },
+      {
+        "poiId": "ca-fort-point",
+        "title": "포트 포인트",
+        "lat": 37.81064,
+        "lon": -122.47684,
+        "source": {
+          "title": "Golden Gate Bridge District · Fort Point Arch",
+          "url": "https://www.goldengate.org/exhibits/fort-point-arch/"
+        },
+        "facts": [
+          "금문교를 설계한 조지프 스트라우스는 다리 남쪽에 철제 아치를 두어 그 아래 벽돌 요새 포트 포인트를 보존했습니다."
+        ]
+      }
+    ],
+    "script": [
+      "샌프란시스코의 물가에는 뜻밖의 이야기가 여럿 있어요. 오늘은 오래 남은 흔적 세 곳을 따라가 봐요.",
+      "팰리스 오브 파인 아츠라는 이름, 미술 궁전이라는 뜻이에요. 처음부터 미술을 위한 곳이었죠. 천구백십오년 박람회에 온 사람들에게 작품을 보여주려고 지었대요.",
+      "크리시 필드에도 그 박람회의 흔적이 남아 있어요. 박람회를 위해 메웠던 바닷가가 나중에는 비행장이 됐죠. 여기서 새벽에 뜬 비행기가 해 질 무렵 미국 대륙을 다 건넌 적도 있어요.",
+      "금문교 아래에도 오래된 이야기가 있어요. 포트 포인트라는 벽돌 요새인데요. 다리를 설계한 사람은 이 요새를 남기려고, 그 위로 커다란 철제 아치를 놓았어요."
+    ],
+    "quiz": {
+      "question": "하나 맞혀 볼까요? 금문교 설계자는 벽돌 요새를 남기려고 무엇을 놓았을까요?",
+      "answer": "철제 아치였어요. 아치가 요새 위를 건너도록 설계한 덕분에 요새를 남길 수 있었죠.",
+      "factId": "ca-fort-point-1"
+    }
+  }
+}
