@@ -19,7 +19,9 @@ async function call(path, status, input, headers = auth) {
 await call("/health", 200);
 await call(query, 401, undefined, {});
 await call("/nearby?lat=900&lon=0", 400);
-assert.equal((await call(query, 200)).places.length, 3);
+const nearbyResults = await call(query, 200);
+assert.ok(nearbyResults.places.length >= 3);
+assert.ok(nearbyResults.places.some(p => p.poiId.startsWith("wiki-")));
 assert.deepEqual((await call("/nearby?lat=35.8&lon=130.5", 200)).places, []);
 
 const story = (poiId, status) => call("/stories", status, { poiId, lat: 35.838, lon: 129.212 });
@@ -72,4 +74,52 @@ for (const region of ["kr", "ca"]) {
   }
   assert.ok(maxSilenceSamples >= 38_400, "Quiz should leave 1.6 seconds to answer");
 }
+
+// Wiki tests
+console.info("Testing Wiki Guide contributions and verification...");
+const wikiList = await call("/wiki/contributions", 200);
+assert.ok(Array.isArray(wikiList.contributions));
+assert.ok(wikiList.contributions.length >= 2);
+
+const singleWiki = await call(`/wiki/contributions?poiId=${wikiList.contributions[0].id}`, 200);
+assert.equal(singleWiki.contribution.id, wikiList.contributions[0].id);
+
+// Add contribution with safety check
+await call("/wiki/contribute", 422, {
+  title: "위험한 장소",
+  lat: 35.838,
+  lon: 129.212,
+  region: "kr",
+  author: "스패머",
+  facts: ["지금 창밖을 보세요 눈앞에 절경이 펼쳐집니다."],
+  source: { title: "출처", url: "https://example.com" },
+});
+
+const newContrib = await call("/wiki/contribute", 201, {
+  title: "첨성대 별빛 정원",
+  lat: 35.8347,
+  lon: 129.219,
+  region: "kr",
+  author: "밤하늘관측자",
+  facts: ["첨성대 주변 잔디밭에는 밤이 되면 야생화 군락 위로 조명이 은은하게 켜집니다."],
+  source: { title: "국가유산청 첨성대 공식 안내", url: "https://www.heritage.go.kr" },
+});
+assert.equal(newContrib.contribution.title, "첨성대 별빛 정원");
+assert.equal(newContrib.contribution.status, "reviewed");
+
+// Test vote
+const voted = await call("/wiki/vote", 200, { id: newContrib.contribution.id, isUpvote: true });
+assert.equal(voted.upvotes, 2);
+
+// Test story generation with wiki POI
+const wikiStory = await call("/stories", 200, {
+  poiId: "wiki-kr-daereungwon-pine",
+  lat: 35.8375,
+  lon: 129.2132,
+});
+assert.ok(wikiStory.wiki);
+assert.equal(wikiStory.wiki.author, "경주로컬_민우");
+assert.equal(wikiStory.wiki.verified, true);
+console.info("Wiki Guide verification tests passed successfully!");
+
 

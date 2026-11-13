@@ -1,0 +1,89 @@
+[
+  {
+    "id": "wiki-kr-daereungwon-pine",
+    "poiId": "wiki-kr-daereungwon-pine",
+    "title": "대릉원 소나무 숲길",
+    "lat": 35.8375,
+    "lon": 129.2132,
+    "region": "kr",
+    "author": "경주로컬_민우",
+    "facts": [
+      "대릉원 돌담길 안쪽에는 30년 넘은 배롱나무와 아름드리 소나무 숲길이 비밀 산책로로 이어집니다.",
+      "소나무 숲길 사이로 보이는 미추왕릉은 신라 최초의 김씨 왕이 묻힌 능으로 봄마다 벚꽃이 가장 먼저 피어납니다."
+    ],
+    "source": {
+      "title": "경주시 문화관광 안내판 및 경주로컬 위키",
+      "url": "https://www.gyeongju.go.kr/tour/index.do"
+    },
+    "status": "verified",
+    "upvotes": 12,
+    "downvotes": 0,
+    "createdAt": "2026-11-01T09:00:00.000Z",
+    "updatedAt": "2026-11-10T14:20:00.000Z"
+  },
+  {
+    "id": "wiki-kr-wolji-lotus",
+    "poiId": "wiki-kr-wolji-lotus",
+    "title": "동궁과 월지 연꽃연못",
+    "lat": 35.8341,
+    "lon": 129.2268,
+    "region": "kr",
+    "author": "천년역사탐방러",
+    "facts": [
+      "동궁과 월지 서편에는 밤이 되면 월정교와 함께 은은한 야경 조명이 켜지는 수변 생태길이 숨어 있습니다.",
+      "신라시대 귀족들이 달을 비추어 보며 풍류를 즐기던 인공 연못 바닥에서 3만 점이 넘는 통일신라 유물이 출토되었습니다."
+    ],
+    "source": {
+      "title": "국립경주문화유산연구소 동궁과 월지 발굴보고서",
+      "url": "https://www.nrich.go.kr"
+    },
+    "status": "verified",
+    "upvotes": 19,
+    "downvotes": 1,
+    "createdAt": "2026-11-03T11:30:00.000Z",
+    "updatedAt": "2026-11-12T10:00:00.000Z"
+  },
+  {
+    "id": "wiki-ca-crissy-marsh",
+    "poiId": "wiki-ca-crissy-marsh",
+    "title": "크리시 필드 습지 조류관찰로",
+    "lat": 37.8038,
+    "lon": -122.4542,
+    "region": "ca",
+    "author": "SFBayWatcher",
+    "facts": [
+      "Crissy Field 북쪽 잔디밭 끝자락에는 바닷물과 민물이 만나는 18에이커 규모의 조간대 습지가 복원되어 있습니다.",
+      "옛 육군 비행장의 활주로 콘크리트를 걷어낸 자리에 매년 백여 종이 넘는 태평양 철새들이 찾아와 먹이를 찾습니다."
+    ],
+    "source": {
+      "title": "Golden Gate National Parks Conservancy Crissy Field Marsh",
+      "url": "https://www.parksconservancy.org/parks/crissy-field"
+    },
+    "status": "verified",
+    "upvotes": 8,
+    "downvotes": 0,
+    "createdAt": "2026-11-05T15:00:00.000Z",
+    "updatedAt": "2026-11-11T18:00:00.000Z"
+  },
+  {
+    "id": "wiki-kr-cdcd2e17",
+    "poiId": "wiki-kr-cdcd2e17",
+    "title": "첨성대 별빛 정원",
+    "lat": 35.8347,
+    "lon": 129.219,
+    "region": "kr",
+    "author": "밤하늘관측자",
+    "facts": [
+      "첨성대 주변 잔디밭에는 밤이 되면 야생화 군락 위로 조명이 은은하게 켜집니다."
+    ],
+    "source": {
+      "title": "국가유산청 첨성대 공식 안내",
+      "url": "https://www.heritage.go.kr"
+    },
+    "status": "reviewed",
+    "upvotes": 2,
+    "downvotes": 0,
+    "createdAt": "2026-11-13T03:43:56.692Z",
+    "updatedAt": "2026-11-13T03:43:56.711Z"
+  }
+]

@@ -3,6 +3,7 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { configured, distance, Failure, getNearby, inRegion, isPoint, isRegion, makeJourney, makeStory, radius, validId } from "./providers.ts";
 import type { Place, Story } from "./providers.ts";
+import { wiki } from "./wiki.ts";
 
 const token = process.env.DEMO_TOKEN?.trim() ?? "";
 const expiresAt = Date.parse(process.env.DEMO_TOKEN_EXPIRES_AT ?? "");
@@ -94,6 +95,49 @@ async function handle(request: IncomingMessage, response: ServerResponse) {
     if (token && (Date.now() >= expiresAt ||
       !timingSafeEqual(hash(request.headers.authorization ?? ""), tokenHash))) {
       throw new Failure(401, "access_denied");
+    }
+    if (request.method === "GET" && url.pathname === "/wiki/contributions") {
+      operation = "wiki_get";
+      const poiId = url.searchParams.get("poiId");
+      if (poiId) {
+        const item = wiki.get(poiId);
+        if (!item) throw new Failure(404, "wiki_not_found");
+        status = 200;
+        return send(response, status, { contribution: item });
+      }
+      const lat = url.searchParams.get("lat");
+      const lon = url.searchParams.get("lon");
+      if (lat && lon) {
+        const point = coordinates(url);
+        const region = url.searchParams.get("region") ?? "kr";
+        if (!isRegion(region)) throw new Failure(400, "invalid_region");
+        const list = wiki.getNearby(point, radius, region, true);
+        status = 200;
+        return send(response, status, { contributions: list });
+      }
+      status = 200;
+      return send(response, status, { contributions: wiki.all() });
+    }
+    if (request.method === "POST" && url.pathname === "/wiki/contribute") {
+      operation = "wiki_contribute";
+      const input = await body(request) as Parameters<typeof wiki.addContribution>[0];
+      rateLimit(operation, 15);
+      const res = wiki.addContribution(input);
+      if (!res.ok) throw new Failure(422, res.reason || "invalid_contribution");
+      status = 201;
+      return send(response, status, { ok: true, contribution: res.contribution });
+    }
+    if (request.method === "POST" && url.pathname === "/wiki/vote") {
+      operation = "wiki_vote";
+      const input = await body(request) as { id?: unknown; isUpvote?: unknown };
+      if (typeof input?.id !== "string" || typeof input?.isUpvote !== "boolean") {
+        throw new Failure(400, "invalid_vote_input");
+      }
+      rateLimit(operation, 60);
+      const res = wiki.vote(input.id, input.isUpvote);
+      if (!res.ok) throw new Failure(404, "wiki_not_found");
+      status = 200;
+      return send(response, status, { ...res });
     }
     if (request.method === "GET" && url.pathname === "/nearby") {
       operation = "nearby";

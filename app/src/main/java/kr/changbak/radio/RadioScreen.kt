@@ -74,7 +74,7 @@ fun RadioScreen(engine: RadioEngine, onStart: (Boolean) -> Unit, openSource: (So
                             val story = selectedStory
                             if (story != null) {
                                 PageTitle(story.title, "목록", ::back)
-                                SourcePage(story, openSource, wide)
+                                SourcePage(story, openSource, wide, onVote = { isUp -> engine.voteWiki(story, isUp) })
                             } else when (page) {
                                 Page.HOME, Page.REGION -> RadioDashboard(engine, state, onStart,
                                     { page = Page.HISTORY }, { page = Page.SETTINGS }, { page = Page.NOTEBOOK },

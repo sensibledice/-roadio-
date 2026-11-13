@@ -85,7 +85,7 @@ private fun HistoryLabel(heard: Heard, modifier: Modifier) {
 }
 
 @Composable
-internal fun SourcePage(story: Story, openSource: (Source) -> Unit, wide: Boolean) {
+internal fun SourcePage(story: Story, openSource: (Source) -> Unit, wide: Boolean, onVote: ((Boolean) -> Unit)? = null) {
     val transcript: @Composable (Modifier) -> Unit = { modifier ->
         SoftPanel(modifier) {
             Text("해설", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
@@ -95,6 +95,7 @@ internal fun SourcePage(story: Story, openSource: (Source) -> Unit, wide: Boolea
             if (story.generatedAt != null) Text("생성 ${localDate(story.generatedAt)}", fontSize = 14.sp)
             else Text("저장 음성 · 자료 확인 ${localDate(story.queriedAt)}", fontSize = 14.sp)
             if (story.cached) Tag("최근 생성 음성", accent = true)
+            story.wiki?.let { WikiCard(it, onVote) }
             story.quiz?.let { QuizCard(it) }
         }
     }
@@ -113,6 +114,37 @@ internal fun SourcePage(story: Story, openSource: (Source) -> Unit, wide: Boolea
     } else {
         transcript(Modifier.fillMaxWidth())
         evidence(Modifier.fillMaxWidth())
+    }
+}
+
+@Composable
+internal fun WikiCard(wiki: WikiMeta, onVote: ((Boolean) -> Unit)?) {
+    var voted by remember { mutableStateOf<Boolean?>(null) }
+    Surface(Modifier.fillMaxWidth(), shape = InnerShape, color = PaleGreen) {
+        Column(Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Tag(if (wiki.verified) "🛡️ 로컬 위키 검증 완료" else "🔍 위키 검증 중", accent = wiki.verified)
+                Text("기여자: @${wiki.author}", color = Ink, fontWeight = FontWeight.Bold, fontSize = 14.sp)
+            }
+            Text("추천 ${wiki.upvotes + (if (voted == true) 1 else 0)}회 · 이 정보는 일반 사용자의 검증을 거친 로컬 가이드입니다.",
+                color = Ink, fontSize = 13.sp)
+            if (onVote != null) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    PlainAction(if (voted == true) "추천 완료 👍" else "정확해요 👍", {
+                        if (voted == null) {
+                            voted = true
+                            onVote(true)
+                        }
+                    })
+                    PlainAction(if (voted == false) "제안 전달 ⚠️" else "수정 제안 ⚠️", {
+                        if (voted == null) {
+                            voted = false
+                            onVote(false)
+                        }
+                    })
+                }
+            }
+        }
     }
 }
 

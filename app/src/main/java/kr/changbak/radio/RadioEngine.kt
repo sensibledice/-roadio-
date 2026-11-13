@@ -370,6 +370,20 @@ class RadioEngine(private val context: Context) {
         show { copy(history = historyStore.entries) }
     }
 
+    fun voteWiki(story: Story, isUpvote: Boolean) {
+        val wiki = story.wiki ?: return
+        if (!ui.detailsAllowed) return
+        scope.launch {
+            val ok = live.voteWiki(connection, wiki.id, isUpvote)
+            if (ok) {
+                val nextUpvotes = if (isUpvote) wiki.upvotes + 1 else wiki.upvotes
+                val updated = story.copy(wiki = wiki.copy(upvotes = nextUpvotes))
+                if (current?.id == story.id) current = updated
+                show { copy(status = if (isUpvote) "위키 기여에 추천을 남겼어요 👍" else "위키 수정 의견을 전달했어요") }
+            }
+        }
+    }
+
     fun openNavigation() {
         if (ui.detailsAllowed && ui.navigation.canOpen) navi?.open()
     }

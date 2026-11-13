@@ -1,10 +1,12 @@
 import { randomInt } from "node:crypto";
 import { readFileSync } from "node:fs";
+import { wiki } from "./wiki.ts";
+import type { WikiMeta } from "./wiki.ts";
 export type Point = { lat: number; lon: number };
 export type Place = Point & { poiId: string; title: string };
 type Fact = { factId: string; text: string };
 type Sentence = { text: string; factIds: string[] };
-type Source = { title: string; url: string };
+export type Source = { title: string; url: string };
 type Quiz = { question: string; answer: string; factId: string };
 type ChapterCue = { poiId: string; startMs: number; endMs: number };
 export type Story = {
@@ -19,6 +21,7 @@ export type Story = {
   durationMs: number;
   chapters?: ChapterCue[];
   quiz?: Quiz & { startMs: number };
+  wiki?: WikiMeta;
 };
 
 type GuidePlace = Place & { source: Source; facts: string[] };
@@ -103,26 +106,31 @@ async function tour(operation: string, params: Record<string, string>, signal: A
 
 const tourId = (value: unknown): value is string => typeof value === "string" && /^[1-9]\d{0,11}$/.test(value);
 export const validId = (value: unknown): value is string => tourId(value) ||
-  typeof value === "string" && california.some(({ poiId }) => poiId === value);
+  typeof value === "string" && (california.some(({ poiId }) => poiId === value) || wiki.get(value) !== undefined);
 
 export async function getNearby(point: Point, signal: AbortSignal, region: Region) {
   if (!inRegion(point, region)) return [];
+  const wikiPlaces = wiki.getNearby(point, radius, region)
+    .map(({ poiId, title, lat, lon }) => ({ poiId, title, lat, lon }));
   if (region === "ca") {
-    return california.filter((place) => distance(place, point) <= radius)
-      .sort((a, b) => distance(a, point) - distance(b, point))
-      .map(({ poiId, title, lat, lon }) => ({ poiId, title, lat, lon }));
+    const list = [...wikiPlaces, ...california.filter((place) => distance(place, point) <= radius)
+      .map(({ poiId, title, lat, lon }) => ({ poiId, title, lat, lon }))];
+    const unique = new Map<string, Place>();
+    for (const place of list) unique.set(place.poiId, place);
+    return [...unique.values()].sort((a, b) => distance(a, point) - distance(b, point));
   }
   const results = await Promise.all([12, 14].map((contentType) => tour("locationBasedList2", {
     mapX: String(point.lon), mapY: String(point.lat), radius: String(radius), arrange: "E",
     numOfRows: "16", pageNo: "1", contentTypeId: String(contentType),
   }, signal)));
   const places = new Map<string, Place>();
+  for (const wp of wikiPlaces) places.set(wp.poiId, wp);
   for (const row of results.flat()) {
     const id = String(row.contentid ?? "");
     const title = clean(row.title).slice(0, 100);
     if (!tourId(id) || !title || !row.mapy || !row.mapx) continue;
     const place = { poiId: id, title, lat: Number(row.mapy), lon: Number(row.mapx) };
-    if (isPoint(place) && distance(place, point) <= radius) places.set(id, place);
+    if (isPoint(place) && distance(place, point) <= radius && !places.has(id)) places.set(id, place);
   }
   return [...places.values()].sort((a, b) => distance(a, point) - distance(b, point)).slice(0, 16);
 }
@@ -216,6 +224,18 @@ function guideFacts(place: GuidePlace) {
 }
 
 async function sourceFor(place: Place, signal: AbortSignal) {
+  const wikiEntry = wiki.get(place.poiId);
+  if (wikiEntry) {
+    const facts = wikiEntry.facts.map((text, index) => ({ factId: `${wikiEntry.id}-${index + 1}`, text }));
+    const wikiMeta: WikiMeta = {
+      id: wikiEntry.id,
+      author: wikiEntry.author,
+      verified: wikiEntry.status === "verified",
+      upvotes: wikiEntry.upvotes,
+      status: wikiEntry.status,
+    };
+    return { title: wikiEntry.title, facts, sources: [wikiEntry.source], wikiMeta };
+  }
   const local = california.find(({ poiId }) => poiId === place.poiId);
   if (local) return { title: local.title, facts: guideFacts(local), sources: [local.source] };
   const detail = (await tour("detailCommon2", { contentId: place.poiId }, signal))
@@ -232,7 +252,7 @@ async function sourceFor(place: Place, signal: AbortSignal) {
 }
 
 export async function makeStory(place: Place, signal: AbortSignal): Promise<Story> {
-  const { title, facts, sources } = await sourceFor(place, signal);
+  const { title, facts, sources, wikiMeta } = await sourceFor(place, signal);
   const queriedAt = new Date().toISOString();
   const specific = facts.filter(({ text }) =>
     !/안내|운영|휴관|주차장|편의시설|예약|이용|인근|방문/u.test(text) && text.length >= 25);
@@ -246,7 +266,7 @@ export async function makeStory(place: Place, signal: AbortSignal): Promise<Stor
   const sentences = sentencesFor(structured, title, facts, focusFactId);
   const wave = makeWave(await speak(sentences.map(({ text }) => text).join(" "), signal), 1, 22);
   return { poiId: place.poiId, title, sentences, facts, sources, queriedAt,
-    generatedAt: new Date().toISOString(), ...wave };
+    generatedAt: new Date().toISOString(), wiki: wikiMeta, ...wave };
 }
 
 export async function makeJourney(region: Region, signal: AbortSignal): Promise<Story> {

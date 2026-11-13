@@ -71,6 +71,15 @@ class LiveStories(context: Context) {
             decode(response, region.journeyId, 3_200_000)
         }
 
+    suspend fun voteWiki(connection: Connection, id: String, isUpvote: Boolean): Boolean =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            runCatching {
+                val body = JSONObject().put("id", id).put("isUpvote", isUpvote)
+                request(connection, "/wiki/vote", body)
+                true
+            }.getOrDefault(false)
+        }
+
     private fun decode(response: JSONObject, id: String, audioLimit: Int): Story {
         check(response.getString("poiId") == id)
         val pcm = android.util.Base64.decode(response.getString("audioBase64"), android.util.Base64.DEFAULT)
@@ -97,12 +106,13 @@ class LiveStories(context: Context) {
         }
         val quiz = response.storyQuiz()
         if (quiz != null) check(quiz.startMs >= previousEnd && quiz.startMs < duration)
+        val wiki = response.wikiMeta()
         val file = File.createTempFile("story-", ".wav", directory)
         file.writeBytes(pcm)
         return Story(id, response.getString("title"),
             sentences.map { it.getString("text") },
             sources, response.getString("queriedAt"), response.getString("generatedAt"),
-            Uri.fromFile(file), response.getBoolean("cached"), evidence, chapters, quiz)
+            Uri.fromFile(file), response.getBoolean("cached"), evidence, chapters, quiz, wiki)
     }
 
     private fun prefix(connection: Connection) = connection.origin.trimEnd('/') + "/"

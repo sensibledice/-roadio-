@@ -49,6 +49,13 @@ data class Place(val id: String, val title: String, val point: Point)
 data class Source(val title: String, val url: String)
 data class ChapterCue(val poiId: String, val startMs: Long, val endMs: Long)
 data class StoryQuiz(val question: String, val answer: String, val startMs: Long)
+data class WikiMeta(
+    val id: String,
+    val author: String,
+    val verified: Boolean,
+    val upvotes: Int,
+    val status: String = "verified"
+)
 
 data class Story(
     val id: String,
@@ -61,7 +68,8 @@ data class Story(
     val cached: Boolean = false,
     val evidence: List<String> = emptyList(),
     val chapters: List<ChapterCue> = emptyList(),
-    val quiz: StoryQuiz? = null
+    val quiz: StoryQuiz? = null,
+    val wiki: WikiMeta? = null
 )
 data class Heard(val key: String, val story: Story, val time: Long)
 data class Candidate(val place: Place, var nearest: Float, var story: Story? = null)
@@ -78,6 +86,16 @@ fun JSONObject.chapterCues() = optJSONArray("chapters")?.objects().orEmpty().map
 
 fun JSONObject.storyQuiz() = optJSONObject("quiz")?.let {
     StoryQuiz(it.getString("question"), it.getString("answer"), it.getLong("startMs"))
+}
+
+fun JSONObject.wikiMeta() = optJSONObject("wiki")?.let {
+    WikiMeta(
+        it.getString("id"),
+        it.getString("author"),
+        it.optBoolean("verified", true),
+        it.optInt("upvotes", 0),
+        it.optString("status", "verified")
+    )
 }
 
 class History(context: Context) {
@@ -99,7 +117,7 @@ class History(context: Context) {
                 item.getJSONArray("sources").objects().map { Source(it.getString("title"), it.getString("url")) },
                 item.getString("queriedAt"), item.optString("generatedAt").ifEmpty { null },
                 uri, item.optBoolean("cached"), item.optJSONArray("evidence")?.strings().orEmpty(),
-                item.chapterCues(), item.storyQuiz())
+                item.chapterCues(), item.storyQuiz(), item.wikiMeta())
             Heard(item.getString("key"), story, item.getLong("time"))
         }.filter { it.story.uri.scheme != "file" || File(it.story.uri.path!!).isFile }
     }.getOrDefault(emptyList())
@@ -141,12 +159,17 @@ class History(context: Context) {
             val quiz = story.quiz?.let {
                 JSONObject().put("question", it.question).put("answer", it.answer).put("startMs", it.startMs)
             }
+            val wiki = story.wiki?.let {
+                JSONObject().put("id", it.id).put("author", it.author)
+                    .put("verified", it.verified).put("upvotes", it.upvotes)
+                    .put("status", it.status)
+            }
             array.put(JSONObject().put("key", key).put("time", time).put("poiId", story.id)
                 .put("title", story.title).put("sentences", JSONArray(story.sentences))
                 .put("sources", sources).put("queriedAt", story.queriedAt)
                 .put("generatedAt", story.generatedAt ?: "").put("uri", story.uri.toString())
                 .put("cached", story.cached).put("evidence", JSONArray(story.evidence))
-                .put("chapters", chapters).put("quiz", quiz))
+                .put("chapters", chapters).put("quiz", quiz).put("wiki", wiki))
         }
         prefs.edit().putString("entries", array.toString()).apply()
     }
