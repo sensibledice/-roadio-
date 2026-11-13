@@ -9,7 +9,7 @@
     "author": "경주로컬_민우",
     "facts": [
       "대릉원 돌담길 안쪽에는 30년 넘은 배롱나무와 아름드리 소나무 숲길이 비밀 산책로로 이어집니다.",
-      "소나무 숲길 사이로 보이는 미추왕릉은 신라 최초의 김씨 왕이 묻힌 능으로 봄마다 벚꽃이 가장 먼저 피어납니다."
+      "소나무 숲길 사이로 보이는 미추왕릉은 신라 김씨 왕조를 연 미추왕이 잠든 능으로 봄마다 벚꽃이 가장 먼저 피어납니다."
     ],
     "source": {
       "title": "경주시 문화관광 안내판 및 경주로컬 위키",
@@ -85,5 +85,47 @@
     "downvotes": 0,
     "createdAt": "2026-11-13T03:43:56.692Z",
     "updatedAt": "2026-11-13T03:43:56.711Z"
+  },
+  {
+    "id": "wiki-kr-da2f3a2f",
+    "poiId": "wiki-kr-da2f3a2f",
+    "title": "첨성대 별빛 정원",
+    "lat": 35.8347,
+    "lon": 129.219,
+    "region": "kr",
+    "author": "밤하늘관측자",
+    "facts": [
+      "첨성대 주변 잔디밭에는 밤이 되면 야생화 군락 위로 조명이 은은하게 켜집니다."
+    ],
+    "source": {
+      "title": "국가유산청 첨성대 공식 안내",
+      "url": "https://www.heritage.go.kr"
+    },
+    "status": "reviewed",
+    "upvotes": 2,
+    "downvotes": 0,
+    "createdAt": "2026-11-13T04:01:31.782Z",
+    "updatedAt": "2026-11-13T04:01:31.797Z"
+  },
+  {
+    "id": "wiki-kr-f3dd0074",
+    "poiId": "wiki-kr-f3dd0074",
+    "title": "첨성대 별빛 정원",
+    "lat": 35.8347,
+    "lon": 129.219,
+    "region": "kr",
+    "author": "밤하늘관측자",
+    "facts": [
+      "첨성대 주변 잔디밭에는 밤이 되면 야생화 군락 위로 조명이 은은하게 켜집니다."
+    ],
+    "source": {
+      "title": "국가유산청 첨성대 공식 안내",
+      "url": "https://www.heritage.go.kr"
+    },
+    "status": "reviewed",
+    "upvotes": 2,
+    "downvotes": 0,
+    "createdAt": "2026-11-13T04:01:59.598Z",
+    "updatedAt": "2026-11-13T04:01:59.619Z"
   }
 ]
