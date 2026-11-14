@@ -15,10 +15,12 @@
 
 ## 설치와 빌드
 
-| APK | 용도 |
+APK는 저장소의 **Releases**에서 내려받습니다. `apk/` 폴더는 로컬 빌드 결과를 두는 곳이며 git에는 올리지 않습니다.
+
+| Releases의 APK | 용도 |
 | --- | --- |
-| `apk/changbak-radio-demo-debug.apk` | 일반 Android용 디버그 APK. Pleos SDK 의존성 없이 빌드합니다. |
-| `apk/changbak-radio-pleos-debug.apk` | NaviHelper 3.0.5를 포함한 Pleos Connect 검증용 디버그 APK. |
+| `changbak-radio-<버전>-demo-debug.apk` | 일반 Android용 디버그 APK. Pleos SDK 의존성 없이 빌드합니다. |
+| `changbak-radio-<버전>-pleos-debug.apk` | NaviHelper 3.0.5와 Pleos TTS 3.3.1을 포함한 Pleos Connect 검증용 디버그 APK. |
 
 JDK 21, Android SDK Platform 36, Build-Tools 35.0.0, Platform-Tools가 필요합니다. Gradle 8.14.3, AGP 8.13.2, Kotlin 2.2.21, Compose BOM 2025.10.01, Media3 1.8.0을 사용합니다. 앱은 API 28 이상에 설치할 수 있고 targetSdk는 35입니다.
 
@@ -27,7 +29,7 @@ $env:JAVA_HOME = 'C:\Program Files\Java\jdk-21.0.11'
 $env:ANDROID_HOME = "$env:USERPROFILE\AppData\Local\Android\Sdk"
 $adb = Join-Path $env:ANDROID_HOME 'platform-tools\adb.exe'
 
-# 준비된 일반 Android 디버그 APK
+# 일반 Android 디버그 APK (Releases에서 받아 apk\ 에 두거나 아래에서 빌드한 파일)
 & $adb devices -l
 & $adb -s emulator-5556 install -r apk\changbak-radio-demo-debug.apk
 & $adb -s emulator-5556 shell am start -W -n kr.changbak.radio/.MainActivity
