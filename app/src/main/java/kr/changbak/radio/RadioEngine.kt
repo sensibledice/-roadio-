@@ -194,8 +194,11 @@ class RadioEngine(private val context: Context) {
                 "가끔, 이곳의 뜻밖의 이야기를 들려드려요" else "위치 신호를 기다리고 있어요") }
     }
 
-    fun begin(bundledDemo: Boolean = false) {
+    fun begin(requestedDemo: Boolean = false) {
         val region = ui.region ?: return
+        // 가상 주행인데 생성 서버가 없으면 저장 음성으로 연다. 서버 없이도 시연이 끊기지 않게 한다.
+        val bundledDemo = requestedDemo ||
+            (selectedPosition == PositionMode.DEMO && !connection.valid(BuildConfig.DEBUG))
         if (!ui.detailsAllowed || !ui.connectedPlayer || ui.active) return
         val mode = if (bundledDemo) PositionMode.DEMO else selectedPosition
         show { copy(positionMode = mode, storyMode = if (bundledDemo) StoryMode.SAVED else StoryMode.LIVE,
