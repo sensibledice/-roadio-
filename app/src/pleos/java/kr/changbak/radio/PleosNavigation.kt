@@ -1,10 +1,12 @@
 package kr.changbak.radio
 
 import ai.pleos.playground.navi.constants.NaviErrorCode
+import ai.pleos.playground.navi.constants.WaypointIndex
 import ai.pleos.playground.navi.data.CurrentLocationInfo
 import ai.pleos.playground.navi.data.DestinationArrivedInfo
 import ai.pleos.playground.navi.data.DestinationInfo
 import ai.pleos.playground.navi.data.NavigationScreenRequest
+import ai.pleos.playground.navi.data.RequestWaypointInfo
 import ai.pleos.playground.navi.data.RouteStartInfo
 import ai.pleos.playground.navi.data.RouteStateInfo
 import ai.pleos.playground.navi.data.TBTInfo
@@ -112,6 +114,15 @@ class PleosNavigation(private val context: Context, private val update: (Navigat
         runCatching { helper?.requestNavigationScreen(NavigationScreenRequest.Foreground) }
             .onSuccess { Log.i(TAG, "sdk_screen_requested") }
             .onFailure { Log.w(TAG, "sdk_screen_failed=${it.javaClass.simpleName}") }
+    }
+
+    override fun addWaypoint(place: Place) {
+        if (!state.connected || !allowed(ROUTE)) return
+        runCatching {
+            helper?.addWaypoint(RequestWaypointInfo(place.point.lat, place.point.lon, place.title, WaypointIndex.FIRST,
+                poiId = place.id, address = "", poiSubId = ""))
+        }.onSuccess { Log.i(TAG, "sdk_waypoint_added") }
+            .onFailure { Log.w(TAG, "sdk_waypoint_failed=${it.javaClass.simpleName} ${it.message}") }
     }
 
     override fun stop() {

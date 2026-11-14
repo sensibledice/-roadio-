@@ -3,7 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
-val withPleos = providers.gradleProperty("withPleos").orNull == "true"
+// Pleos(NaviHelper)가 기본이다. 일반 안드로이드 빌드가 필요하면 -PwithPleos=false
+val withPleos = providers.gradleProperty("withPleos").orNull != "false"
 val releaseStore = providers.environmentVariable("RADIO_KEYSTORE").orNull
 android {
     namespace = "kr.changbak.radio"

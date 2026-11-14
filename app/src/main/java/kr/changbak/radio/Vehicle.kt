@@ -25,6 +25,8 @@ interface Navigation {
     fun poll()
     fun stop()
     fun open()
+    /** 이야기 속 장소를 내비 경유지로 추가한다. 내비가 없으면 아무 일도 하지 않는다. */
+    fun addWaypoint(place: Place) {}
 }
 
 fun newNavigation(context: Context, update: (NavigationState) -> Unit,

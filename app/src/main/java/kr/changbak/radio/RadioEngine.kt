@@ -370,6 +370,11 @@ class RadioEngine(private val context: Context) {
         show { copy(history = historyStore.entries) }
     }
 
+    /** 시연(가상 주행)이거나 주차 중일 때만 경유지를 추가한다. 실제 주행 중에는 누르지 못하게 한다. */
+    fun stopBy(place: Place) {
+        if (ui.detailsAllowed || ui.positionMode == PositionMode.DEMO) navi?.addWaypoint(place)
+    }
+
     fun openNavigation() {
         if (ui.detailsAllowed && ui.navigation.canOpen) navi?.open()
     }

@@ -205,6 +205,11 @@ private fun PlayerPanel(engine: RadioEngine, state: RadioState, route: DemoRoute
                     else -> RadioIcon.RADIO
                 }, enabled = state.connectedPlayer && !preparing, busy = preparing)
             }
+            val stop = route.chapters.getOrNull(chapter)?.place
+            if (!compact && stop != null && state.navigation.connected && state.audio != null) {
+                AccentAction("들러보기 · ${stop.title}", { engine.stopBy(stop) },
+                    Modifier.fillMaxWidth().padding(top = 8.dp), icon = RadioIcon.ROUTE)
+            }
         }
     }
 }

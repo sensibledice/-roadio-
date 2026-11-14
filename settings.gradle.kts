@@ -10,7 +10,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        if (providers.gradleProperty("withPleos").orNull == "true") {
+        if (providers.gradleProperty("withPleos").orNull != "false") {
             maven("https://nexus-playground.pleos.ai/repository/maven-releases/") {
                 content { includeGroup("ai.pleos.playground") }
             }
