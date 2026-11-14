@@ -6,7 +6,6 @@ type Fact = { factId: string; text: string };
 type Sentence = { text: string; factIds: string[] };
 type Source = { title: string; url: string };
 type Quiz = { question: string; answer: string; factId: string };
-type ChapterCue = { poiId: string; startMs: number; endMs: number };
 export type Story = {
   poiId: string;
   title: string;
@@ -15,10 +14,9 @@ export type Story = {
   sources: Source[];
   queriedAt: string;
   generatedAt: string;
-  audioBase64: string;
-  durationMs: number;
-  chapters?: ChapterCue[];
-  quiz?: Quiz & { startMs: number };
+  // 음성은 앱이 Pleos TTS로 읽는다. 서버는 대본과 근거만 보낸다.
+  chapters?: { poiId: string }[];
+  quiz?: Quiz;
 };
 
 type GuidePlace = Place & { source: Source; facts: string[] };
@@ -127,15 +125,15 @@ export async function getNearby(point: Point, signal: AbortSignal, region: Regio
   return [...places.values()].sort((a, b) => distance(a, point) - distance(b, point)).slice(0, 16);
 }
 
-async function postOpenAI(operation: string, body: object, signal: AbortSignal) {
+async function postOpenAI(body: object, signal: AbortSignal) {
   const key = process.env.OPENAI_API_KEY;
   if (!key) throw new Failure(503, "openai_not_configured");
-  const response = await fetch(new URL(operation, openaiOrigin), {
+  const response = await fetch(new URL("responses", openaiOrigin), {
     method: "POST", signal, redirect: "error",
     headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" },
     body: JSON.stringify(body),
   });
-  if (!response.ok) throw new Failure(502, operation === "responses" ? "text_upstream" : "speech_upstream");
+  if (!response.ok) throw new Failure(502, "text_upstream");
   return response;
 }
 
@@ -184,33 +182,6 @@ function sentencesFor(value: unknown, title: string, facts: Fact[], focusFactId:
   return sentences.map(({ text, factIds }) => ({ text: text.trim(), factIds: [...new Set(factIds)] }));
 }
 
-// OpenAI PCM is 24 kHz, mono, signed 16-bit little endian.
-const bytesPerMs = 48;
-const silence = (ms: number) => Buffer.alloc(ms * bytesPerMs);
-
-function makeWave(pcm: Buffer, minSeconds: number, maxSeconds: number) {
-  if (pcm.length < minSeconds * 48_000 || pcm.length > maxSeconds * 48_000 || pcm.length % 2 !== 0) {
-    throw new Failure(422, "invalid_audio");
-  }
-  const leadIn = 180 * bytesPerMs;
-  const length = leadIn + pcm.length;
-  const wave = Buffer.alloc(44 + length);
-  wave.write("RIFF", 0);
-  wave.writeUInt32LE(36 + length, 4);
-  wave.write("WAVEfmt ", 8);
-  wave.writeUInt32LE(16, 16);
-  wave.writeUInt16LE(1, 20);
-  wave.writeUInt16LE(1, 22);
-  wave.writeUInt32LE(24000, 24);
-  wave.writeUInt32LE(48000, 28);
-  wave.writeUInt16LE(2, 32);
-  wave.writeUInt16LE(16, 34);
-  wave.write("data", 36);
-  wave.writeUInt32LE(length, 40);
-  pcm.copy(wave, 44 + leadIn);
-  return { audioBase64: wave.toString("base64"), durationMs: Math.round(length / bytesPerMs) };
-}
-
 function guideFacts(place: GuidePlace) {
   return place.facts.map((text, index) => ({ factId: `${place.poiId}-${index + 1}`, text }));
 }
@@ -244,9 +215,8 @@ export async function makeStory(place: Place, signal: AbortSignal): Promise<Stor
     "각 문장에 직접 근거인 factId를 붙이세요. 둘째 문장의 factIds에는 focusFactId가 반드시 들어갑니다.",
   ], 420, signal);
   const sentences = sentencesFor(structured, title, facts, focusFactId);
-  const wave = makeWave(await speak(sentences.map(({ text }) => text).join(" "), signal), 1, 22);
   return { poiId: place.poiId, title, sentences, facts, sources, queriedAt,
-    generatedAt: new Date().toISOString(), ...wave };
+    generatedAt: new Date().toISOString() };
 }
 
 export async function makeJourney(region: Region, signal: AbortSignal): Promise<Story> {
@@ -278,34 +248,14 @@ export async function makeJourney(region: Region, signal: AbortSignal): Promise<
     throw new Failure(422, "unverified_quiz");
   }
 
-  // Independent synthesis gives real chapter boundaries and a consistent pause before the answer.
-  const speech = new AbortController();
-  const voiceSignal = AbortSignal.any([signal, speech.signal]);
-  const clips = await Promise.all([
-    ...sentences.map(({ text }) => speak(text, voiceSignal)),
-    speak(quiz.question, voiceSignal),
-    speak(quiz.answer, voiceSignal),
-  ]).finally(() => speech.abort());
-  const pieces: Buffer[] = [];
-  let elapsedBytes = 180 * bytesPerMs;
-  const chapters = stops.map((stop, index) => {
-    const startMs = index === 0 ? 0 : Math.round(elapsedBytes / bytesPerMs);
-    const chapter = index === 0 ? clips[index] : Buffer.concat([silence(180), clips[index]]);
-    pieces.push(chapter);
-    elapsedBytes += chapter.length;
-    return { poiId: stop.poiId, startMs, endMs: Math.round(elapsedBytes / bytesPerMs) };
-  });
-  const quizStartMs = Math.round(elapsedBytes / bytesPerMs);
-  pieces.push(silence(360), clips[stops.length], silence(1600), clips[stops.length + 1]);
-  const wave = makeWave(Buffer.concat(pieces), 18, 65);
   return { poiId: "journey-" + region, title, sentences, facts: sections.flatMap(({ facts }) => facts),
     sources: stops.map(({ source }) => source), queriedAt, generatedAt: new Date().toISOString(),
-    chapters, quiz: { ...quiz, startMs: quizStartMs }, ...wave };
+    chapters: stops.map(({ poiId }) => ({ poiId })), quiz };
 }
 
 async function generate(input: object, instructions: string[], tokens: number, signal: AbortSignal,
   outputSchema: typeof schema = schema): Promise<unknown> {
-  const response = await postOpenAI("responses", {
+  const response = await postOpenAI({
     model: process.env.OPENAI_TEXT_MODEL || "gpt-4o-mini",
     store: false,
     instructions: [
@@ -334,25 +284,4 @@ async function generate(input: object, instructions: string[], tokens: number, s
   } catch {
     throw new Failure(422, "invalid_script");
   }
-}
-
-async function speak(text: string, signal: AbortSignal): Promise<Buffer> {
-  const speech = await postOpenAI("audio/speech", {
-    model: process.env.OPENAI_SPEECH_MODEL || "gpt-4o-mini-tts",
-    voice: process.env.OPENAI_SPEECH_VOICE || "marin",
-    response_format: "pcm",
-    speed: 0.96,
-    input: text.trim(),
-    instructions: "편안한 표준 한국어를 쓰는 여행 동승자처럼 말하세요. 짧은 문장 사이에 자연스러운 숨을 두고, 발견한 물건이나 사실만 살짝 강조하세요. 일정한 방송조나 과장된 연기는 피하세요. 질문에는 호기심을 담되 문장 끝을 길게 끌지 마세요.",
-  }, signal);
-  const pcm = Buffer.from(await speech.arrayBuffer());
-  if (pcm.length < 24_000 || pcm.length > 1_200_000 || pcm.length % 2 !== 0) {
-    throw new Failure(422, "invalid_audio");
-  }
-  let first = 0;
-  let last = pcm.length - 2;
-  while (first < last && Math.abs(pcm.readInt16LE(first)) < 200) first += 2;
-  while (last > first && Math.abs(pcm.readInt16LE(last)) < 200) last -= 2;
-  if (last - first < 12_000) throw new Failure(422, "silent_audio");
-  return pcm.subarray(Math.max(0, first - 50 * bytesPerMs), Math.min(pcm.length, last + 100 * bytesPerMs));
 }

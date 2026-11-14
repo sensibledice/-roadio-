@@ -74,7 +74,7 @@ class RadioService : MediaLibraryService() {
         override fun onPlayerCommandRequest(session: MediaSession, controller: MediaSession.ControllerInfo,
             playerCommand: Int): Int {
             when (playerCommand) {
-                Player.COMMAND_PLAY_PAUSE -> if (player.playWhenReady) radio.pause() else radio.resume()
+                Player.COMMAND_PLAY_PAUSE -> if (radio.state.value.playing) radio.pause() else radio.resume()
                 Player.COMMAND_STOP -> radio.end()
                 else -> return SessionResult.RESULT_SUCCESS
             }

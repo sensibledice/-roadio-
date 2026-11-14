@@ -67,7 +67,7 @@ class RadioEngine(private val context: Context) {
     fun route(region: TripRegion) = routes.getOrPut(region) { DemoRoute(context, region) }
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val handler = Handler(Looper.getMainLooper())
-    private val live = LiveStories(context)
+    private val live = LiveStories()
     private val historyStore = History(context)
     private val preferences = context.getSharedPreferences("connection", Context.MODE_PRIVATE)
     private val initialRegion = TripRegion.entries.find { it.id == preferences.getString("region", null) }
@@ -83,6 +83,10 @@ class RadioEngine(private val context: Context) {
     var connection = Connection(preferences.getString("origin", "").orEmpty())
         private set
     private var player: Player? = null
+    // 대본만 받은 AI 해설은 SpokenPlayer가 읽는다. 저장 음원은 ExoPlayer(player)가 재생한다.
+    private val spokenLazy = lazy { SpokenPlayer(context).also { it.addListener(listener) } }
+    private val spoken by spokenLazy
+    private val activePlayer: Player? get() = if (current?.spoken == true) spoken else player
     private var foreground = false
     private var locationServiceReady = false
     private var location: Fix? = null
@@ -153,6 +157,7 @@ class RadioEngine(private val context: Context) {
     fun detach() {
         end()
         player?.removeListener(listener)
+        if (spokenLazy.isInitialized()) spoken.release()
         player = null
         navi?.stop()
         restrictions.disconnect()
@@ -227,6 +232,7 @@ class RadioEngine(private val context: Context) {
             else -> "경로 전체의 AI 해설을 준비하는 중"
         }) }
         Log.i(TAG, "session_started position=$mode stories=${ui.storyMode} region=${region.id}")
+        if (!bundledDemo) spoken // 음성 엔진을 미리 깨워 첫 문장의 지연을 줄인다
         if (mode == PositionMode.DEMO) {
             startJourney(region, bundledDemo)
             return
@@ -280,7 +286,7 @@ class RadioEngine(private val context: Context) {
         }
         loop = scope.launch {
             while (ui.active) {
-                player?.let { player ->
+                activePlayer?.let { player ->
                     if (!ui.paused && !transientLoss && !player.playWhenReady &&
                         SystemClock.elapsedRealtime() >= focusBlockedUntil) {
                         startAudio()
@@ -298,7 +304,7 @@ class RadioEngine(private val context: Context) {
             stopPlayback()
             return
         }
-        player?.pause()
+        activePlayer?.pause()
         abandonFocus()
         gps.stop()
         if (ui.positionMode != PositionMode.DEMO) resetCandidate()
@@ -404,7 +410,7 @@ class RadioEngine(private val context: Context) {
         }
         if (!playbackAllowed() || transientLoss) return
         if (current != null) {
-            if (player?.playWhenReady == false && now >= focusBlockedUntil) {
+            if (activePlayer?.playWhenReady == false && now >= focusBlockedUntil) {
                 if (validForPlayback()) startAudio() else stopPlayback()
             }
             return
@@ -523,29 +529,37 @@ class RadioEngine(private val context: Context) {
         pendingHistory = remember
         show { copy(title = story.title, status = "음성 재생 준비 중", cached = story.cached,
             generatedAt = story.generatedAt, sources = story.sources, audio = AudioProgress(story.id)) }
-        val item = MediaItem.Builder().setMediaId(story.id).setUri(story.uri)
-            .setMediaMetadata(MediaMetadata.Builder().setTitle(story.title)
-                .setArtist(context.getString(R.string.app_name)).setIsPlayable(true).build())
-        if (chapter != null) item.setClippingConfiguration(MediaItem.ClippingConfiguration.Builder()
-            .setStartPositionMs(chapter.startMs).setEndPositionMs(chapter.endMs).build())
-        player.setMediaItem(item.build())
-        player.prepare()
-        waveformJob = scope.launch {
-            val levels = withContext(Dispatchers.IO) {
-                readWaveform(context, story.uri, chapter?.startMs ?: 0, chapter?.endMs)
+        val output: Player
+        if (story.spoken) {
+            output = spoken
+            spoken.load(story.id, narration(story.sentences, story.quiz))
+        } else {
+            output = player
+            val item = MediaItem.Builder().setMediaId(story.id).setUri(story.uri)
+                .setMediaMetadata(MediaMetadata.Builder().setTitle(story.title)
+                    .setArtist(context.getString(R.string.app_name)).setIsPlayable(true).build())
+            if (chapter != null) item.setClippingConfiguration(MediaItem.ClippingConfiguration.Builder()
+                .setStartPositionMs(chapter.startMs).setEndPositionMs(chapter.endMs).build())
+            player.setMediaItem(item.build())
+            player.prepare()
+            waveformJob = scope.launch {
+                val levels = withContext(Dispatchers.IO) {
+                    readWaveform(context, story.uri, chapter?.startMs ?: 0, chapter?.endMs)
+                }
+                show { copy(audio = audio?.copy(waveform = levels)) }
             }
-            show { copy(audio = audio?.copy(waveform = levels)) }
         }
         audioClock = scope.launch {
             while (current != null) {
-                if (player.duration > 0) {
+                if (output.duration > 0) {
                     show {
-                        val position = player.currentPosition
+                        val position = output.currentPosition
                         val quizStart = story.quiz?.startMs
-                        val progress = audio?.copy(positionMs = position, durationMs = player.duration,
+                        val progress = audio?.copy(positionMs = position, durationMs = output.duration,
+                            waveform = if (story.spoken) spoken.levels() else audio.waveform,
                             chapterIndex = story.chapters.indexOfLast { position in it.startMs until it.endMs },
                             quizActive = quizStart != null && position >= quizStart)
-                        val routeDuration = quizStart?.takeIf { it > 0 } ?: player.duration
+                        val routeDuration = quizStart?.takeIf { it > 0 } ?: output.duration
                         copy(audio = progress, demoProgress = if (active && positionMode == PositionMode.DEMO)
                             (position.toFloat() / routeDuration).coerceIn(0f, 1f) else demoProgress)
                     }
@@ -556,7 +570,7 @@ class RadioEngine(private val context: Context) {
     }
 
     private fun startAudio() {
-        val player = player ?: return
+        val player = activePlayer ?: return
         if (current == null || player.playbackState != Player.STATE_READY ||
             transientLoss || !validForPlayback()) return
         if (!focusHeld) {
@@ -587,6 +601,7 @@ class RadioEngine(private val context: Context) {
         pendingHistory = false
         player?.pause()
         player?.clearMediaItems()
+        if (spokenLazy.isInitialized()) spoken.run { pause(); clearMediaItems() }
         abandonFocus()
         show { copy(playing = false, audio = null) }
     }
@@ -606,7 +621,7 @@ class RadioEngine(private val context: Context) {
             }
             AudioManager.AUDIOFOCUS_LOSS_TRANSIENT, AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK -> {
                 transientLoss = true
-                player?.pause()
+                activePlayer?.pause()
                 show { copy(status = "다른 오디오가 재생되어 잠시 대기 중") }
             }
             AudioManager.AUDIOFOCUS_GAIN -> {
@@ -643,7 +658,7 @@ class RadioEngine(private val context: Context) {
                 (isPlaying && active && positionMode == PositionMode.DEMO),
                 status = if (isPlaying) "재생 중" else status) }
             if (!isPlaying) return
-            Log.i(TAG, "audio_started id=${story.id} duration_ms=${player?.duration} position_ms=${player?.currentPosition}")
+            Log.i(TAG, "audio_started id=${story.id} duration_ms=${activePlayer?.duration} position_ms=${activePlayer?.currentPosition}")
             if (pendingHistory) {
                 pendingHistory = false
                 played.add(story.id)

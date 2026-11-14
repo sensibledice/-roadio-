@@ -1,4 +1,6 @@
-import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
+import { createServer as createHttp } from "node:http";
+import { createServer as createHttps } from "node:https";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { configured, distance, Failure, getNearby, inRegion, isPoint, isRegion, makeJourney, makeStory, radius, validId } from "./providers.ts";
@@ -165,6 +167,15 @@ async function handle(request: IncomingMessage, response: ServerResponse) {
   }
 }
 
-const server = createServer({ requestTimeout: 15_000, headersTimeout: 5_000 }, handle);
-server.listen(port, "127.0.0.1", () => console.info(JSON.stringify({ event: "listening", port })));
+// 직접 HTTPS: TLS_CERT·TLS_KEY(PEM 경로)를 주면 HTTPS로 열고, 없으면 루프백 HTTP다.
+// 외부에 열려면(HOST) 인증서와 시연 접근 코드가 모두 있어야 한다.
+const host = process.env.HOST || "127.0.0.1";
+const tls = process.env.TLS_CERT && process.env.TLS_KEY
+  ? { cert: readFileSync(process.env.TLS_CERT), key: readFileSync(process.env.TLS_KEY) } : undefined;
+if (host !== "127.0.0.1" && host !== "localhost" && (!tls || !token)) {
+  throw new Error("HOST를 열려면 TLS_CERT, TLS_KEY와 DEMO_TOKEN이 필요합니다");
+}
+const limits = { requestTimeout: 15_000, headersTimeout: 5_000 };
+const server = tls ? createHttps({ ...limits, ...tls }, handle) : createHttp(limits, handle);
+server.listen(port, host, () => console.info(JSON.stringify({ event: "listening", port, host, https: Boolean(tls) })));
 

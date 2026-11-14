@@ -1,10 +1,8 @@
 package kr.changbak.radio
 
-import android.content.Context
 import android.net.Uri
 import android.os.SystemClock
 import org.json.JSONObject
-import java.io.File
 import java.net.HttpURLConnection
 import java.net.URI
 
@@ -18,8 +16,7 @@ data class Connection(val origin: String = "", val token: String = "") {
     }
 }
 
-class LiveStories(context: Context) {
-    private val directory = File(context.cacheDir, "generated").apply { mkdirs() }
+class LiveStories {
     private data class Cached(val place: Place, val story: Story, val until: Long)
     private val recent = linkedMapOf<String, Cached>()
 
@@ -50,7 +47,7 @@ class LiveStories(context: Context) {
             val key = prefix(connection) + place.id
             try {
                 val response = request(connection, "/stories", body)
-                val story = decode(response, place.id, 2_000_000)
+                val story = decode(response, place.id)
                 synchronized(recent) {
                     recent[key] = Cached(place, story, SystemClock.elapsedRealtime() + 600_000)
                     if (recent.size > 16) recent.remove(recent.keys.first())
@@ -68,13 +65,11 @@ class LiveStories(context: Context) {
     suspend fun journey(connection: Connection, region: TripRegion): Story =
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val response = request(connection, "/journey", JSONObject().put("region", region.id))
-            decode(response, region.journeyId, 3_200_000)
+            decode(response, region.journeyId)
         }
 
-    private fun decode(response: JSONObject, id: String, audioLimit: Int): Story {
+    private fun decode(response: JSONObject, id: String): Story {
         check(response.getString("poiId") == id)
-        val pcm = android.util.Base64.decode(response.getString("audioBase64"), android.util.Base64.DEFAULT)
-        check(pcm.size in 44..audioLimit && String(pcm, 0, 4) == "RIFF")
         val sources = response.getJSONArray("sources").objects().map {
             val url = URI(it.getString("url"))
             check(url.scheme == "https" && url.host != null && url.userInfo == null)
@@ -82,33 +77,30 @@ class LiveStories(context: Context) {
         }
         check(sources.isNotEmpty())
         val sentences = response.getJSONArray("sentences").objects()
+        val texts = sentences.map { it.getString("text") }
+        check(texts.isNotEmpty() && texts.all { it.isNotBlank() && it.length <= 400 })
         val factIds = sentences.flatMap { it.getJSONArray("factIds").strings() }.toSet()
         val evidence = response.getJSONArray("facts").objects()
             .filter { it.getString("factId") in factIds }
             .map { it.getString("text") }
         check(evidence.isNotEmpty())
-        val duration = (pcm.size - 44L) / 48
-        val chapters = response.chapterCues()
-        var previousEnd = 0L
-        for (chapter in chapters) {
-            check(chapter.startMs >= previousEnd && chapter.endMs > chapter.startMs &&
-                chapter.endMs <= duration + 1)
-            previousEnd = chapter.endMs
+        // 서버는 대본만 보낸다. 장면 길이는 읽기 속도로 추정하고, 재생 중에는 덩이가 끝날 때 맞춘다.
+        val sent = response.optJSONObject("quiz")
+        val parts = narration(texts, sent?.let { StoryQuiz(it.getString("question"), it.getString("answer"), 0) })
+        val ids = response.optJSONArray("chapters")?.objects().orEmpty().map { it.getString("poiId") }
+        check(ids.isEmpty() || ids.size == texts.size)
+        var elapsed = 0L
+        val chapters = ids.mapIndexed { i, poiId ->
+            ChapterCue(poiId, elapsed, elapsed + parts[i].estimateMs).also { elapsed = it.endMs }
         }
-        val quiz = response.storyQuiz()
-        if (quiz != null) check(quiz.startMs >= previousEnd && quiz.startMs < duration)
-        val file = File.createTempFile("story-", ".wav", directory)
-        file.writeBytes(pcm)
-        return Story(id, response.getString("title"),
-            sentences.map { it.getString("text") },
-            sources, response.getString("queriedAt"), response.getString("generatedAt"),
-            Uri.fromFile(file), response.getBoolean("cached"), evidence, chapters, quiz)
+        val quiz = sent?.let { StoryQuiz(it.getString("question"), it.getString("answer"), elapsed) }
+        return Story(id, response.getString("title"), texts, sources, response.getString("queriedAt"),
+            response.getString("generatedAt"), Uri.EMPTY, response.getBoolean("cached"), evidence, chapters, quiz)
     }
 
     private fun prefix(connection: Connection) = connection.origin.trimEnd('/') + "/"
 
-    private fun Cached.usable() = SystemClock.elapsedRealtime() < until &&
-        story.uri.path?.let { File(it).exists() } == true
+    private fun Cached.usable() = SystemClock.elapsedRealtime() < until
 
     private fun request(connection: Connection, path: String, body: JSONObject? = null): JSONObject {
         val url = URI(connection.origin.trimEnd('/') + path).toURL()
@@ -135,7 +127,7 @@ class LiveStories(context: Context) {
                 while (true) {
                     val size = input.read(buffer)
                     if (size == -1) break
-                    check(bytes.size() + size <= if (path == "/journey") 4_400_000 else 3_000_000)
+                    check(bytes.size() + size <= 200_000)
                     bytes.write(buffer, 0, size)
                 }
                 JSONObject(bytes.toString("UTF-8"))

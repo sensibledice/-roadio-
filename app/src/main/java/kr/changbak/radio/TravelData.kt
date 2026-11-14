@@ -62,7 +62,10 @@ data class Story(
     val evidence: List<String> = emptyList(),
     val chapters: List<ChapterCue> = emptyList(),
     val quiz: StoryQuiz? = null
-)
+) {
+    /** 음원 파일이 없으면 앱이 Pleos TTS로 대본을 읽는다. */
+    val spoken get() = uri.toString().isEmpty()
+}
 data class Heard(val key: String, val story: Story, val time: Long)
 data class Candidate(val place: Place, var nearest: Float, var story: Story? = null)
 

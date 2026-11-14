@@ -5,31 +5,6 @@ const valid = { contentid: '126128', title: '경주 대릉원', mapx: '129.21228
 const noSource = { ...valid, contentid: '126129', title: '자료 없는 곳' }
 const invalid = { ...valid, contentid: '126130', title: '검증 대상' }
 const guides = JSON.parse(readFileSync(new URL("../data/journeys.json", import.meta.url), "utf8"))
-const timings = JSON.parse(readFileSync(new URL("../../app/src/main/assets/journey_audio.json", import.meta.url), "utf8"))
-const fixtureClips = new Map()
-for (const [region, guide] of Object.entries(guides)) {
-  const bytes = readFileSync(new URL(`../../app/src/main/res/raw/journey_story_${region}.wav`, import.meta.url)).subarray(44)
-  const offset = ms => Math.round(ms * 44.1) * 2
-  const { chapters, quizStartMs } = timings[region]
-  chapters.forEach(([start, end], index) => {
-    fixtureClips.set(guide.script[index + 1], bytes.subarray(offset(start), offset(end)))
-  })
-  let silentStart = -1
-  for (let position = offset(quizStartMs); position < bytes.length; position += 2) {
-    if (bytes.readInt16LE(position) === 0) {
-      if (silentStart < 0) silentStart = position
-    } else {
-      if (silentStart >= 0 && position - silentStart >= offset(1_590)) {
-        fixtureClips.set(guide.quiz.question, bytes.subarray(offset(quizStartMs), silentStart))
-        fixtureClips.set(guide.quiz.answer, bytes.subarray(position))
-        break
-      }
-      silentStart = -1
-    }
-  }
-  assert.ok(fixtureClips.has(guide.quiz.answer))
-}
-const audio = readFileSync(new URL('../../app/src/main/res/raw/daereungwon.wav', import.meta.url))
 globalThis.fetch = async (input, init) => {
   const url = new URL(input)
   if (url.host === 'apis.data.go.kr') {
@@ -72,15 +47,7 @@ globalThis.fetch = async (input, init) => {
       return Response.json({ status: 'completed', output: [{ content: [{ type: 'output_text',
         text: JSON.stringify(result) }] }] })
     }
-    assert.ok(url.pathname.endsWith('/audio/speech'))
-    assert.equal(body.response_format, 'pcm')
-    // Fixture PCM uses downsampled demo samples, independent of the OpenAI service.
-    assert.match(body.instructions, /표준 한국어/)
-    const from = fixtureClips.get(body.input) ?? audio.subarray(44)
-    const sampleCount = Math.floor(from.length / 2 * 24000 / 44100)
-    const pcm = Buffer.alloc(sampleCount * 2)
-    for (let i = 0; i < sampleCount; i++) pcm.writeInt16LE(from.readInt16LE(Math.floor(i * 44100 / 24000) * 2), i * 2)
-    return new Response(pcm, { headers: { 'Content-Type': 'application/octet-stream' } })
+    throw new Error('Unexpected OpenAI operation')
   }
   return originalFetch(input, init)
 }

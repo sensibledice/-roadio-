@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 
 const base = process.env.FIXTURE_ORIGIN || "http://127.0.0.1:8788";
 const auth = { Authorization: "Bearer fixture-local-access-2026" };
 const query = "/nearby?lat=35.838&lon=129.212";
+const guides = JSON.parse(readFileSync(new URL("../data/journeys.json", import.meta.url), "utf8"));
 
 async function call(path, status, input, headers = auth) {
   const options = input ? {
@@ -29,15 +31,12 @@ assert.equal((await story("126129", 404)).error, "no_source");
 assert.equal((await story("126130", 422)).error, "unverified_script");
 const first = await story("126128", 200);
 const cached = await story("126128", 200);
-const wav = Buffer.from(first.audioBase64, "base64");
-assert.equal(wav.toString("ascii", 0, 4), "RIFF");
-assert.deepEqual(wav.subarray(44, 44 + 8640), Buffer.alloc(8640));
-assert.ok(first.durationMs > 8_000 && first.durationMs <= 22_180);
+assert.ok(!("audioBase64" in first), "음성은 앱의 Pleos TTS가 만든다");
 assert.equal(first.sentences.length, 2);
 assert.ok(first.sentences[0].text.includes(first.title));
 assert.ok(cached.cached && cached.generatedAt === first.generatedAt);
 assert.ok(first.sentences.every((sentence) => sentence.factIds.length > 0));
-console.info("Fixture WAV verified", first.durationMs, "ms, 180 ms lead-in");
+console.info("Fixture story verified: script only, no audio");
 
 const ca = { lat: 37.80436, lon: -122.45951 };
 const local = await call(`/nearby?lat=${ca.lat}&lon=${ca.lon}&region=ca`, 200);
@@ -53,23 +52,8 @@ for (const region of ["kr", "ca"]) {
   assert.equal(journey.poiId, "journey-" + region);
   assert.equal(journey.sentences.length, 3);
   assert.equal(journey.sources.length, 3);
-  assert.ok(journey.durationMs >= 18_000);
+  assert.ok(!("audioBase64" in journey));
   assert.ok(journey.quiz.question.endsWith("?"));
   assert.ok(journey.sentences.at(-1).factIds.includes(journey.quiz.factId));
-  assert.equal(journey.chapters.length, 3);
-  assert.equal(journey.quiz.startMs, journey.chapters.at(-1).endMs);
-  let previousEnd = 0;
-  for (const chapter of journey.chapters) {
-    assert.ok(chapter.startMs >= previousEnd && chapter.endMs > chapter.startMs);
-    previousEnd = chapter.endMs;
-  }
-  const recording = Buffer.from(journey.audioBase64, "base64");
-  let silenceSamples = 0;
-  let maxSilenceSamples = 0;
-  for (let offset = 44 + journey.quiz.startMs * 48; offset < recording.length; offset += 2) {
-    silenceSamples = recording.readInt16LE(offset) === 0 ? silenceSamples + 1 : 0;
-    maxSilenceSamples = Math.max(maxSilenceSamples, silenceSamples);
-  }
-  assert.ok(maxSilenceSamples >= 38_400, "Quiz should leave 1.6 seconds to answer");
+  assert.deepEqual(journey.chapters.map(({ poiId }) => poiId), guides[region].stops.map(({ poiId }) => poiId));
 }
-

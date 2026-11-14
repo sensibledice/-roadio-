@@ -2,6 +2,7 @@
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE" />
     <uses-permission android:name="pleos.car.permission.NAVI_CUSTOM_MAP" />
     <uses-permission android:name="pleos.car.permission.NAVI_ROUTE_SEARCH" />
+    <uses-permission android:name="pleos.car.permission.TTS_SERVICE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -10,6 +11,9 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-feature android:name="android.hardware.type.automotive" android:required="false" />
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <queries>
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+    </queries>
     <application android:name=".RadioApplication" android:label="@string/app_name"
         android:appCategory="audio" android:icon="@drawable/ic_radio" android:allowBackup="false"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">

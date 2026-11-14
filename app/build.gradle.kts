@@ -13,8 +13,8 @@ android {
         applicationId = "kr.changbak.radio"
         minSdk = 28
         targetSdk = 35
-        versionCode = 5
-        versionName = "0.5.0"
+        versionCode = 6
+        versionName = "0.6.0"
     }
     sourceSets["main"].assets.srcDir(rootProject.file("server/data"))
     if (withPleos) {
@@ -51,6 +51,7 @@ dependencies {
     implementation("androidx.media3:media3-exoplayer:1.8.0")
     implementation("androidx.media3:media3-session:1.8.0")
     if (withPleos) implementation("ai.pleos.playground:NaviHelper:3.0.5")
+    if (withPleos) implementation("ai.pleos.playground:TextToSpeech:3.3.1")
 }
 
 
