@@ -1,9 +1,12 @@
-# 창밖라디오 0.6.0
+# Roadio(길 라디오)
 
 차량 위치에 맞춰 지역 이야기를 한국어로 들려주는 Pleos Connect용 앱입니다. 서버가 확인 가능한 지역 자료로 대본과 퀴즈를 만들고, 앱에서 **Pleos TTS**가 읽습니다.
 
+[**데모 영상 보기 (1분 18초)**](https://github.com/sensibledice/hyundai_Pleos_-/blob/main/docs/Roadio_demo.mp4) · 경주 가상 주행, 경유지 음성 해설, 동승자 퀴즈, 여정 노트
+
 | | |
 | --- | --- |
+| 버전 | 0.6.0 |
 | 대상 | Pleos Connect 2.1.0 (API 34), 일반 Android 28 이상은 데모 빌드 |
 | 시연 | 저장 음성 시연은 인터넷·키 없이 동작. AI 여행 라디오는 생성 서버 필요 |
 | 음성 | 저장 시연은 Supertonic 3 WAV, AI 해설은 Pleos TTS(실패 시 기기 TTS) |
@@ -49,12 +52,12 @@ Copy-Item app\build\outputs\apk\debug\app-debug.apk apk\changbak-radio-pleos-deb
 
 ```powershell
 .\gradlew.bat '-PwithPleos=true' :app:assembleRelease
-Copy-Item app\build\outputs\apk\release\app-release.apk 'apk\팀명_창밖라디오_release.apk'
+Copy-Item app\build\outputs\apk\release\app-release.apk 'apk\팀명_Roadio_release.apk'
 ```
 
 ## Pleos에서 시연하기
 
-현대차 앱 아이디어 공모전의 ‘창밖동화’가 이동 경로와 지역 이야기, 동승자 퀴즈를 연결한 데서 착안했습니다. 창밖라디오는 확인 가능한 지역 자료를 바탕으로 경유지 사이에 이어지는 이야기와 짧은 퀴즈를 구성합니다. [현대자동차그룹 수상작 소개](https://www.hyundaimotorgroup.com/ko/news/hyundai-motor-company-pleos-connect-app-best-customer-idea)
+현대차 앱 아이디어 공모전의 ‘창밖동화’가 이동 경로와 지역 이야기, 동승자 퀴즈를 연결한 데서 착안했습니다. Roadio는 확인 가능한 지역 자료를 바탕으로 경유지 사이에 이어지는 이야기와 짧은 퀴즈를 구성합니다. [현대자동차그룹 수상작 소개](https://www.hyundaimotorgroup.com/ko/news/hyundai-motor-company-pleos-connect-app-best-customer-idea)
 
 홈은 지도, 검은 음성 플레이어, 여정 노트, 공통 녹색 버튼으로 구성됩니다. 플레이어의 파형은 저장 음원에서는 실제 음원을 분석해, AI 해설에서는 Pleos TTS가 알려 주는 실제 음량을 읽은 만큼 그립니다. 녹색 부분은 재생한 구간입니다. 가상 주행에서도 지도와 플레이어의 위치가 유지됩니다. 저장 시연과 생성한 시연에서 현재 해설하는 경유지를 지도와 장소 목록에서 강조합니다. 마지막에는 질문을 읽고 약 1.6초를 비운 뒤 정답을 읽습니다. 음성 재생은 답변 입력 없이 계속됩니다.
 
