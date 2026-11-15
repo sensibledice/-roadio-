@@ -1,18 +1,15 @@
 # Roadio(길 라디오)
 
-차량 위치에 맞춰 지역 이야기를 한국어로 들려주는 Pleos Connect용 앱입니다. 서버가 확인 가능한 지역 자료로 대본과 퀴즈를 만들고, 앱에서 **Pleos TTS**가 읽습니다.
+차량 위치에 맞춰 경유지의 이야기와 동승자 퀴즈를 한국어 음성으로 들려주는 Pleos Connect 앱입니다.
 
-[**데모 영상 보기 (1분 18초)**](https://github.com/sensibledice/hyundai_Pleos_-/blob/main/docs/Roadio_demo.mp4) · 경주 가상 주행, 경유지 음성 해설, 동승자 퀴즈, 여정 노트
-
-| | |
+| 항목 | 요약 |
 | --- | --- |
-| 버전 | 0.6.0 |
-| 대상 | Pleos Connect 2.1.0 (API 34), 일반 Android 28 이상은 데모 빌드 |
-| 시연 | 저장 음성 시연은 인터넷·키 없이 동작. AI 여행 라디오는 생성 서버 필요 |
-| 음성 | 저장 시연은 Supertonic 3 WAV, AI 해설은 Pleos TTS(실패 시 기기 TTS) |
-| 구조 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) |
-| APK | 저장소의 Releases 최신 릴리스(디버그 서명) |
-| 실행 | [설치와 빌드](#설치와-빌드) · [생성 서버](#생성-서버) |
+| APK 다운로드 | [GitHub Release v0.6.0](https://github.com/sensibledice/Roadio/releases/tag/v0.6.0)의 `changbak-radio-0.6.0-pleos-debug.apk` |
+| 실행 방법 | Pleos 에뮬레이터를 실행하고 `adb devices`로 기기 ID를 확인한 뒤 `adb -s <기기_ID> install -r <APK_경로>`로 설치합니다. 에뮬레이터의 앱 목록에서 **길라디오(Roadio)**를 열고 **한국 → 저장 음성 시연**을 선택합니다. [설치와 빌드](#설치와-빌드) |
+| 테스트 환경 및 설정 | 저장 음성 시연은 인터넷, 서버, API 키 없이 실행됩니다. AI 여행 라디오는 Node.js 24 이상, `OPENAI_API_KEY`를 설정한 [생성 서버](#생성-서버), 앱의 서버 주소 설정이 필요합니다. 국내 실위치 검색에는 `TOUR_API_KEY`도 필요합니다. |
+| 개발 에뮬레이터 | Pleos Connect **2.1.0** · Android **API 34** · **x86_64** |
+| 화면 규격 | 가로 **2560 × 1440 px**, **160 dpi** |
+| 데모 영상 | [경주 가상 주행 시연 보기 (1분 18초)](https://github.com/sensibledice/Roadio/blob/main/docs/Roadio_demo.mp4) |
 
 첫 실행에서 국내 한국 또는 국외 미국 캘리포니아를 선택합니다. `연결 설정 → 여행 지역 변경`에서 다시 고를 수 있습니다. 한국을 고르면 가상 주행으로, 캘리포니아를 고르면 기기 위치로 시작하도록 설정됩니다.
 
